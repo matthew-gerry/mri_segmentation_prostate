@@ -9,12 +9,13 @@ from torch.utils.data import Dataset
 
 from medsegbench import Promise12MSBench
 
-def load_images(size=128):
+def load_images(set, size=128):
     ''' Specify the size to which the images should be resized. Output is the image datasets in the form of lists of PIL images '''
-    train_images = Promise12MSBench(split="train", download=True, size=size)
-    val_images = Promise12MSBench(split="val", download=True, size=size)
-
-    return train_images, val_images
+    if set=="train":
+        images = Promise12MSBench(split="train", download=True, size=size)
+    if set=="val":
+        images = Promise12MSBench(split="val", download=True, size=size)
+    return images
 
 class MRIDataset(Dataset):
     def __init__(self, base_dataset):
@@ -23,7 +24,7 @@ class MRIDataset(Dataset):
     def __len__(self):
         return len(self.base_dataset)
 
-    def __getitemsa__(self, idx):
+    def __getitem__(self, idx):
         ''' For converting the PIL image lists into tensors and normalizing them for use in training the model. Also converts the masks to binary format. '''
         image, mask = self.base_dataset[idx]
 
