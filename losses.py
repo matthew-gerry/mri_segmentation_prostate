@@ -6,25 +6,25 @@ import torch
 import torch.nn as nn
 from utils import distance_transform
 
-def bce_loss(pos_weight=1.0):
+def bce_loss(logits, targets, pos_weight=1.0):
     '''BINARY CROSS-ENTROPY LOSS WITH LOGITS '''
     # pos_weight > 1 gives more weight to positive class (prostate), helping with class imbalance
     bce_loss = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([pos_weight]))
+    return bce_loss(logits, targets)
 
-
-def dice_loss(logits, target, eps=1e-7):
+def dice_loss(logits, targets, eps=1e-7):
     """
     MEASURE OF OVERLAP BETWEEN TWO SAMPLES. IT RANGES FROM 0 TO 1, WHERE 1 MEANS PERFECT OVERLAP AND 0 MEANS NO OVERLAP
      
     logits: (B, 1, H, W) raw outputs
-    target: (B, 1, H, W) binary masks
+    targets: (B, 1, H, W) binary masks
     eps: small constant to avoid division by zero
     """
     prob = logits.sigmoid()
     prob   = prob.view(prob.size(0), -1)
-    target = target.view(target.size(0), -1)
-    intersection = (prob * target).sum(dim=1) # Implement dice loss per-sample (sum over specific dimension)
-    union = prob.sum(dim=1) + target.sum(dim=1)
+    targets = targets.view(targets.size(0), -1)
+    intersection = (prob * targets).sum(dim=1) # Implement dice loss per-sample (sum over specific dimension)
+    union = prob.sum(dim=1) + targets.sum(dim=1)
     dice = (2 * intersection + eps) / (union + eps)
     return 1 - dice.mean() # Subtract from 1 to convert to a loss (we want to maximize dice)
 
@@ -46,7 +46,7 @@ def boundary_loss_from_logits(logits, sdf, max_dist=20.0):
     return torch.mean(probs * sdf)
 
 
-def boundary_band_loss(logits, target, sdf, max_dist=20.0):
+def boundary_band_loss(logits, targets, sdf, max_dist=20.0):
     """
     BOUNDARY THAT EMPHASIZES ERRORS NEAR THE BOUNDARY, WHICH IS WHERE THE ISSUES TEND TO BE
     
@@ -58,7 +58,7 @@ def boundary_band_loss(logits, target, sdf, max_dist=20.0):
     # weights high near boundary (distance ~0), low far away
     w = 1.0 - torch.clamp(torch.abs(sdf), 0, max_dist) / max_dist  # in [0,1]
     # focus on mistakes near boundary
-    return torch.mean(w * torch.abs(probs - target))
+    return torch.mean(w * torch.abs(probs - targets))
 
 
 

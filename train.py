@@ -9,8 +9,8 @@ import torch
 from torch.utils.data import DataLoader
 import time
 
-from dataset import load_images, MRIDataset
-from model import SimpleUNet
+from prostatemri_dataset import load_images, MRIDataset
+from mriseg_model import SimpleUNet
 from losses import combined_loss
 
 def main():
@@ -34,7 +34,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Train the model
-    num_epochs = 10
+    num_epochs = 15
     start_time = time.time()
     for epoch in range(num_epochs):
         model.train() # This line sets the model to training mode, which is important for layers like dropout and batch normalization to behave correctly during training
@@ -57,7 +57,7 @@ def main():
         print(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {avg_train_loss:.4f}")
 
         training_time = time.time() - start_time
-        print(f"Total training time so far: {training_time:.2f} seconds")
+        print(f"Total training time so far: {training_time//60:.0f}m {training_time%60:.0f}s")
     
     # Save the trained model
     torch.save(model.state_dict(), "prostate_unet.pth")

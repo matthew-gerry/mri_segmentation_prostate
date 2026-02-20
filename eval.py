@@ -4,8 +4,9 @@ Evaluate the model for the prostate segmentation task, using the validation set 
 
 import torch
 from torch.utils.data import DataLoader
-from dataset import load_images, MRIDataset
-from model import SimpleUNet
+from prostatemri_dataset import load_images, MRIDataset
+from mriseg_model import SimpleUNet
+from losses import combined_loss
 import utils
 
 def main(model, dataloader):
@@ -17,6 +18,8 @@ def main(model, dataloader):
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 
     # Initialize metrics
+    total_loss = 0.0
+    total_accuracy = 0.0
     total_dice = 0.0
     num_samples = 0
 
@@ -24,12 +27,25 @@ def main(model, dataloader):
         for images, masks in val_loader:
             outputs = model(images)
 
+            # Compute combined loss for monitoring (not used for optimization here)
+            batch_loss = combined_loss(outputs, masks, boundary_weight=1.0)
+            total_loss += batch_loss.item() * images.size(0)
+
+            # Compute accuracy for this batch
+            batch_accuracy = utils.accuracy(outputs, masks)
+            total_accuracy += batch_accuracy.item() * images.size(0)
+
             # Compute Dice coefficient for this batch
             batch_dice = utils.dice_coefficient(outputs, masks)
             total_dice += batch_dice.item() * images.size(0)
+
             num_samples += images.size(0)
 
+    avg_loss = total_loss / num_samples
+    avg_accuracy = total_accuracy / num_samples
     avg_dice = total_dice / num_samples
+    print(f"Average Loss on Validation Set: {avg_loss:.4f}")
+    print(f"Average Accuracy on Validation Set: {avg_accuracy*100:.2f}%")
     print(f"Average Dice Coefficient on Validation Set: {avg_dice:.4f}")
 
 if __name__ == "__main__":

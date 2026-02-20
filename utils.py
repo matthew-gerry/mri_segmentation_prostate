@@ -31,30 +31,43 @@ def signed_distance_map(mask):
     return sdf.astype(np.float32)
 
 
-def accuracy(outputs, masks):
+def accuracy(logits, masks):
     '''CALCULATE THE ACCURACY OF THE PREDICTIONS, WHICH IS THE FRACTION OF PIXELS CORRECTLY CLASSIFIED '''
 
     # The outputs are logits, apply sigmoid and threshold at 0.5
-    predicted = torch.sigmoid(outputs).float()
-    predicted = (predicted > 0.5).squeeze(1).float()  # Binarize predictions
+    predictions = torch.sigmoid(logits) > 0.5  # Binarize predictions
 
-    correct = (predicted == masks.squeeze(1)).sum().item()
-    total = masks.numel()
-    accuracy = correct / total
+    # predictions = (predictions > 0.5).squeeze(1).float()  # Binarize predictions
+
+    batch_size = predictions.shape[0]
+    predictions = predictions.view(batch_size, -1)
+    masks = masks.view(batch_size, -1)
+
+    # Compute accuracy for each sample in batch
+    # correct = torch.sum(predictions == masks, dim=1).sum().item()
+    # Convert to float for division, and compute total number of pixels
+    correct = torch.sum(predictions == masks, dim=1).float()
+    total = predictions.shape[1]
+    sample_accuracy = correct / total
     
-    return accuracy
+    return torch.mean(sample_accuracy)
 
-def dice_coefficient(outputs, masks, eps=1e-7):
+def dice_coefficient(logits, masks, eps=1e-7):
     ''' CALCULATE THE DICE COEFFICIENT, WHICH IS A MEASURE OF OVERLAP BETWEEN THE PREDICTION AND THE GROUND TRUTH MASK. IT RANGES FROM 0 TO 1, WHERE 1 MEANS PERFECT OVERLAP AND 0 MEANS NO OVERLAP. THIS IS A MORE MEANINGFUL METRIC THAN ACCURACY FOR IMBALANCED DATASETS '''
 
     # The outputs are logits, apply sigmoid and threshold at 0.5
-    predicted = torch.sigmoid(outputs).float()
-    predicted = (predicted > 0.5).squeeze(1).float()
-    masks = masks.squeeze(1).float()
+    predictions = torch.sigmoid(logits) > 0.5  # Binarize predictions
+
+    # Flatten spatial dimensions while preserving batch
+    batch_size = predictions.shape[0]
+    predictions = predictions.view(batch_size, -1)
+    masks = masks.view(batch_size, -1)
     
-    intersection = (predicted * masks).sum().item()
-    union = predicted.sum().item() + masks.sum().item()
-    dice = (2 * intersection + eps) / (union + eps)
+    # Compute Dice for each sample in batch
+    intersection = torch.sum(predictions * masks, dim=1)
+    union = torch.sum(predictions, dim=1) + torch.sum(masks, dim=1)
+    # Avoid division by zero
+    dice = (2.0 * intersection) / (union + 1e-8)
     
-    return dice
+    return torch.mean(dice)
 
