@@ -5,11 +5,11 @@ Evaluate the model for the prostate segmentation task, using the validation set 
 import torch
 from torch.utils.data import DataLoader
 from prostatemri_dataset import load_images, MRIDataset
-from mriseg_model import SimpleUNet
+from mriseg_models import SimpleUNet, TLDeepLabV3MobileNet
 from losses import combined_loss
 import utils
 
-def main(model, dataloader):
+def main(model):
     model.eval() # Set model to evaluation mode (important for layers like dropout and batch normalization)
    
     # Load in the validation data
@@ -26,6 +26,10 @@ def main(model, dataloader):
     with torch.no_grad(): # No need to compute gradients during evaluation
         for images, masks in val_loader:
             outputs = model(images)
+            
+            # The transfer learning-based model outputs a dict, access the 'out' key for the logits
+            if isinstance(outputs, dict) and 'out' in outputs:
+                outputs = outputs['out']
 
             # Compute combined loss for monitoring (not used for optimization here)
             batch_loss = combined_loss(outputs, masks, boundary_weight=1.0)
@@ -44,14 +48,17 @@ def main(model, dataloader):
     avg_loss = total_loss / num_samples
     avg_accuracy = total_accuracy / num_samples
     avg_dice = total_dice / num_samples
-    print(f"Average Loss on Validation Set: {avg_loss:.4f}")
-    print(f"Average Accuracy on Validation Set: {avg_accuracy*100:.2f}%")
+    print(f"Average Combined Loss on Validation Set: {avg_loss:.4f}")
     print(f"Average Dice Coefficient on Validation Set: {avg_dice:.4f}")
+    print(f"Average Accuracy on Validation Set: {avg_accuracy*100:.2f}%")
 
 if __name__ == "__main__":
     # Load the trained model
     model = SimpleUNet()
     model.load_state_dict(torch.load("prostate_unet.pth"))
 
+    # model = TLDeepLabV3MobileNet(backbone_unfreeze_substrings = ("5", "6"), classifier_unfreeze_last_K = 4)
+    # model.load_state_dict(torch.load("prostate_transfer_model.pth"))
+
     # Run evaluation
-    main(model, None)
+    main(model)
