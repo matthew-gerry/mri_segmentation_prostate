@@ -1,3 +1,5 @@
 *.pyc
 __pycache__/
 *pth
+DICE_scores/
+to_do.txt
