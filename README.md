@@ -1,16 +1,10 @@
-To do:
-- Write description of the project
-- Attach example MRI images with model prediction
+This is a self-study project to develop image segmentation models for identifying which pixels correspond to the prostate in MRI images.
 
-- Create some plots
-    - Training + validation loss curves vs. epoch
-    - (*) Same thing but DICE coefficient instead of overall loss (I like this better; maybe do validation only)
-    - (*) Histogram of probabilities for prostate and background pixels (e.g., for all pixels labelled '0' in the mask, show the distribution of probabilties assigned by the model--these should cluster around zero)
-    - Precision-recall curve (figure out what this is)
-    - (*) Dice vs threshold - vary the decision threshold from 0 to 1 and show how the DICE varies with this choice
-        - Do this and then modify the project scripts to use the optimal threshold
-    - (*) Perimeter error (to address the elephant in the room that my model gets the shape wrong)
-    - (*) Bland-Altman plot - agreement between predicted and ground truth area
-    - Confusion matrix over all pixels, show as heat map
+Using the Promise12MSBench dataset available from the medsegbench library, I trained two models: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
 
-- Publish
+For the latter, the base model needed to be modified so that the final output layer is a 1x1 convolution, such that the outputs correspond to logits that give a probability of being part of the prostate when passed through a sigmoid. I also found that unfreezing the last {\it four} layers of the ''classifier'' as well as the last two modules in the backbone, provided sufficient flexibility that model training was possible.
+
+The resulting models reliably identified the location of the prostate and got its size approximately correct, but both struggled to get the shape quite right. It is worth noting that training was limited to a laptop CPU. Attempts to address this included incorporating a ''Hausdorff'' contribution to the loss function, which amplifies the significance of errors close to the boundary of the feature of interest. For both the model trained from scratch and the transfer learning-based model, it would also be interesting to investigate whether having more tunable parameters improves performance, either through a more elaborate neural network architecture, or through a transfer-based approach with more modules unfrozen.
+
+For the transfer-based model, below is a plot of the validation set DICE score through each epoch of training, showing convergence to a value around 0.74.
+![alt text](https://github.com/matthew-gerry/image_seg_tutorial/blob/main/figs/transfer_val_dice_vs_epoch.png?raw=true)
