@@ -2,6 +2,8 @@
 Utils for prostate segmentation tutorial, including distance transform function and accuracy measures.
 '''
 
+from matplotlib import units
+from matplotlib import units
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 import torch
@@ -52,11 +54,12 @@ def accuracy(logits, masks):
     
     return torch.mean(sample_accuracy)
 
-def dice_coefficient(logits, masks, eps=1e-7):
+
+def dice_coefficient(logits, masks, threshold=0.5, eps=1e-7):
     ''' CALCULATE THE DICE COEFFICIENT, WHICH IS A MEASURE OF OVERLAP BETWEEN THE PREDICTION AND THE GROUND TRUTH MASK. IT RANGES FROM 0 TO 1, WHERE 1 MEANS PERFECT OVERLAP AND 0 MEANS NO OVERLAP. THIS IS A MORE MEANINGFUL METRIC THAN ACCURACY FOR IMBALANCED DATASETS '''
 
     # The outputs are logits, apply sigmoid and threshold at 0.5
-    predictions = torch.sigmoid(logits) > 0.5  # Binarize predictions
+    predictions = torch.sigmoid(logits) > threshold  # Binarize predictions
 
     # Flatten spatial dimensions while preserving batch
     batch_size = predictions.shape[0]
@@ -67,7 +70,31 @@ def dice_coefficient(logits, masks, eps=1e-7):
     intersection = torch.sum(predictions * masks, dim=1)
     union = torch.sum(predictions, dim=1) + torch.sum(masks, dim=1)
     # Avoid division by zero
-    dice = (2.0 * intersection) / (union + 1e-8)
+    dice = (2.0 * intersection) / (union + eps)
     
     return torch.mean(dice)
 
+
+
+def bland_altman_areas(logits, masks, threshold=0.5):
+    ''' CALCULATE THE BLAND-ALTMAN MEASURES FOR THE PREDICTED VS GROUND TRUTH AREAS FOR A BATCH OF PREDICTIONS AND MASKS. RETURNS A DICT WITH ALL QUANTITIES RELEVANT TO CREATING THE BLAND-ALTMAN PLOT '''
+
+    # The outputs are logits, apply sigmoid and threshold at 0.5
+    predictions = torch.sigmoid(logits) > threshold  # Binarize predictions
+
+    # Flatten spatial dimensions while preserving batch
+    batch_size = predictions.shape[0]
+    predictions = predictions.view(batch_size, -1)
+    masks = masks.view(batch_size, -1)
+
+    gt_areas = masks.sum(dim=1).numpy()  # (B,)
+    pred_areas = predictions.sum(dim=1).numpy()  # (B,)
+
+    # means = 0.5 * (pred_areas + gt_areas)
+    # diffs = pred_areas - gt_areas
+    # bias = float(diffs.mean())
+    # sd = float(diffs.std(ddof=1)) if diffs.size > 1 else 0.0
+    # loa_low = bias - 1.96 * sd
+    # loa_high = bias + 1.96 * sd
+
+    return gt_areas, pred_areas
