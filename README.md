@@ -6,18 +6,18 @@ For the latter, the base model needed to be modified so that the final output la
 
 Here are some examples of images from the validation set, showing the ground truth contour of the prostate as well as the outline of each model's prediction. In the lower plots is a heat map of the probability the respective model assigned for each pixel to be part of the prostate.
 
-![alt text](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/visualization_scratch.png?raw=true "A visualization of the predictions of the U-Net model trained from scratch, shown superimposed with the ground truth, for the location and shape of the prostate in MRI images.")
-![alt text](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/visualization_tl.png?raw=true)
+![visualization of model predictions and probability heatmaps for the U-Net trained from scratch](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/visualization_scratch.png?raw=true)
+![visualization of model predictions and probability heatmaps for the transfer learning-based model](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/visualization_tl.png?raw=true)
 
 
 The resulting models reliably identified the location of the prostate and got its size approximately correct, but both struggled to get the shape quite right. It is worth noting that training was limited to a laptop CPU. Attempts to address this included incorporating a ''Hausdorff'' contribution to the loss function, which amplifies the significance of errors close to the boundary of the feature of interest. For both the model trained from scratch and the transfer learning-based model, it would also be interesting to investigate whether having more tunable parameters improves performance, either through a more elaborate neural network architecture, or through a transfer-based approach with more modules unfrozen.
 
 Included is a pair of plots of the DICE score for the validation data through each epoch of training for both the from-scratch U-Net and the transfer learning-based model, showing convergence to a value around 0.94 for the former and 0.74 for the latter.
 
-![alt text](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/val_DICE_vs_epoch.png?raw=true)
+![Plots of the DICE coefficient on the validation data vs training epoch for each model](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/val_DICE_vs_epoch.png?raw=true)
 
 The high DICE score for the simple U-Net does seem somewhat at odds with visual inaccuracies we can see in the predicted contours of the prostate for a few example images from the validation set.
 
 Also shown is a Bland-Altman plot showing how the areas of the prostate as predicted by the U-Net model (from scratch) compare to the ground truth. The plot indicates that the model tends to underestimate the size of the prostate in the images, with a few outliers contibuting especially to bringing the overall bias down. These outliers represent cases in which few or no pixels were included in the prediction, despite the fact that a DICE coefficient-based loss was used to try and account for the imbalance between non-prostate and prostate pixels in the gruond truth dataset.
 
-![alt text](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/val_bland_altman_scratch.png?raw=true)
+![Bland-Altman plot showing the performance of the U-Net trained from scratch](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/val_bland_altman_scratch.png?raw=true)
