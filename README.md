@@ -1,6 +1,6 @@
-This is a self-study project to develop image segmentation models for identifying which pixels correspond to the prostate in MRI images.
+This is a self-study project to develop image segmentation models.
 
-Using the Promise12MSBench dataset available from the medsegbench library, I trained two models: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
+Using the Promise12MSBench dataset available from the medsegbench library (https://medsegbench.github.io/), I trained two models to identify pixels making up the prostate in MRI images: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
 
 For the latter, the base model needed to be modified so that the final output layer is a 1x1 convolution, such that the outputs correspond to logits that give a probability of being part of the prostate when passed through a sigmoid. I also found that unfreezing the last four layers of the ''classifier'' as well as the last two modules in the backbone, provided sufficient flexibility that training could result in a model with some effectiveness on the dataset.
 
