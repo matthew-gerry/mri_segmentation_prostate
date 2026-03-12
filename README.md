@@ -1,4 +1,4 @@
-This is a self-study project to develop image segmentation models.
+This is a self-study project to develop image segmentation models. The program is currently used by running the Python scripts, with the configuration set and hyperparameter adjustments made by editing the scripts themselves. In the feature branch I am working on turning it into a cli tool.
 
 Using the Promise12MSBench dataset available from the medsegbench library (https://medsegbench.github.io/), I trained two models to identify pixels making up the prostate in MRI images: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
 
