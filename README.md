@@ -1,4 +1,4 @@
-This is a self-study project to develop image segmentation models. The program is currently used by running the Python scripts, with the configuration set and hyperparameter adjustments made by editing the scripts themselves. In the feature branch I am working on turning it into a cli tool.
+This is a self-study project to develop image segmentation models. The program is currently used by running the Python scripts, with the configuration set and hyperparameter adjustments made by editing the scripts themselves. In the feature branch I am working on turning it into a cli tool. Currently, the train command of the cli tool is complete, but additional commands are still being developed (evaluate, predict, visualizations, etc.).
 
 Using the Promise12MSBench dataset available from the medsegbench library (https://medsegbench.github.io/), I trained two models to identify pixels making up the prostate in MRI images: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
 
@@ -21,3 +21,10 @@ The high DICE score for the simple U-Net does seem somewhat at odds with visual 
 Also shown is a Bland-Altman plot showing how the areas of the prostate as predicted by the U-Net model (from scratch) compare to the ground truth. The plot indicates that the model tends to underestimate the size of the prostate in the images, with a few outliers contibuting especially to bringing the overall bias down. These outliers represent cases in which few or no pixels were included in the prediction, despite the fact that a DICE coefficient-based loss was used to try and account for the imbalance between non-prostate and prostate pixels in the ground truth dataset.
 
 ![Bland-Altman plot showing the performance of the U-Net trained from scratch](https://github.com/matthew-gerry/mri_segmentation_prostate/blob/main/figs/val_bland_altman_scratch.png?raw=true)
+
+Install the latest version of the cli tool (with the train command complete, other commands still to come) by running:
+
+```pip install "image-seg[promise12] @ git+https://github.com/matthew-gerry/mri_segmentation_prostate.git@feature"```
+
+The train command can then be run, along with a config.yaml file formatted according to the example provided, using:
+```image-seg train --config <path-to-config-yaml-file>```
