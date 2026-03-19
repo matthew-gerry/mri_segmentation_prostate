@@ -1,0 +1,49 @@
+# configs/promise12_mnv3.yaml
+
+# Defaults that apply to all commands unless overridden
+defaults:
+  device: cpu
+  num_workers: 2
+  resize: 128
+  threshold: 0.5
+  save_dir: ./runs/promise12_mnv3
+
+# Train-specific settings
+train:
+  dataset: promise12
+  train_split: train
+  val_split: val
+  download: true
+  arch: deeplabv3-mnv3
+  pretrained: true
+  epochs: 10
+  batch_size: 16
+  lr: 0.001
+  weight_decay: 0.0
+  bce_weight: 1.0
+  dice_weight: 1.0
+  boundary_weight: 0.0
+
+# Evaluate-specific settings
+evaluate:
+  dataset: promise12
+  split: val
+  checkpoint: ./runs/image-seg/best.pt
+  metrics: [dice, pr, confusion]
+
+# Predict/visualize (example)
+# predict:
+#   dataset: promise12
+#   split: val
+#   checkpoint: ./runs/image-seg/best.pt
+#   save_dir: ./runs/image-seg/preds
+#   save_prob: false
+#   overlay: true
+
+# Bland-Altman (example)
+# ba:
+#   dataset: promise12
+#   split: val
+#   checkpoint: ./runs/image-seg/best.pt
+#   relative: false
+#   pixel_spacing: null  # e.g., [0.625, 0.625] if known

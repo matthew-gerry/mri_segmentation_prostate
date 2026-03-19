@@ -63,8 +63,8 @@ def build_datasets(cfg: TrainConfig):
             from medsegbench import Promise12MSBench
         except Exception as e:
             raise RuntimeError(
-                "Dataset 'promise12' requires medsegbench. "
-                "Install it or use --dataset folders."
+                "Dataset 'promise12' requires the optional dependency medsegbench. "
+                "Install it via: pip install image-seg[promise12]."
             ) from e
     
         base_train = Promise12MSBench(split=cfg.train_split, download=cfg.download, size=cfg.resize)
@@ -218,7 +218,7 @@ def run(args) -> int:
         val_loss, val_dice = validate_one_epoch(model, val_loader, device, cfg)
 
         total_time = time.time() - t0
-        print(f"Epoch {epoch:02d}/{cfg.epochs}  "
+        print(f"Epoch {epoch}/{cfg.epochs}  "
               f"Train loss: {train_loss:.4f}  Val loss: {val_loss:.4f}  Val DICE: {val_dice:.4f}\n"
               f"Total elapsed time: [{int(total_time) // 60}:{(int(total_time) % 60):02d}]")
 

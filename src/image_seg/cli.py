@@ -1,6 +1,7 @@
 # src/image_seg/cli.py
 
 import argparse
+import yaml
 from image_seg.commands.train import run as run_train
 
 def build_parser():
@@ -10,16 +11,14 @@ def build_parser():
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # First tiny subcommand: 'hello' just to verify wiring works
-    # p_hello = sub.add_parser("hello", help="Sanity check command")
-    # p_hello.add_argument("--name", default="world", help="Name to greet")
-    # p_hello.set_defaults(func=cmd_hello)
-
-    # --- Arguments for train subcommand ---
+    # Arguments for train subcommand
     p_train = sub.add_parser("train", help="Train a model")
     
+    # Path to YAML config file (optional, can also specify options via CLI args)
+    p_train.add_argument("--config", help="Path to YAML config file")
+
     # Data import settings
-    p_train.add_argument("--dataset", required=True,
+    p_train.add_argument("--dataset",
         choices=["promise12"],
         help="Current data source: 'promise12' via MedSegBench. Support for additional online or local datasets may be added through modifications to the source code."
     )
@@ -68,17 +67,75 @@ def build_parser():
     # Bind to function
     p_train.set_defaults(func=run_train)
 
+
+    # Arguments for evaluate command (skeleton for later) ----
+    # p_eval = subs.add_parser("evaluate", help="Evaluate a model")
+    # p_eval.add_argument("--dataset", choices=["promise12"], default=None)
+    # p_eval.add_argument("--split", default=None)
+    # p_eval.add_argument("--checkpoint", default=None)
+    # p_eval.add_argument("--threshold", type=float, default=None)
+    # p_eval.add_argument("--device", choices=["cpu", "cuda"], default=None)
+    # p_eval.set_defaults(func=run_evaluate)
+
     return parser
 
-# def cmd_hello(args: argparse.Namespace) -> int:
-#     # For testing that CLI wiring works
-#     print(f"Hello, {args.name}! CLI wiring works.")
-#     return 0
+
+def load_yaml(path: str) -> dict:
+    ''' Load YAML config file and return as dict '''
+    with open(path, "r") as f:
+        data = yaml.safe_load(f) or {}
+    if not isinstance(data, dict):
+        raise ValueError("Config YAML must contain a top-level mapping (dict).")
+    return data
+
+
+def get_subparser(parser: argparse.ArgumentParser, name: str) -> argparse.ArgumentParser:
+    ''' Utility to access a subparser by name (e.g. "train") for setting defaults from YAML '''
+    subparsers_action = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
+    return subparsers_action.choices[name]
+
 
 def main() -> int:
+    # Parse minimally to see command and config path
     parser = build_parser()
-    args = parser.parse_args()
+    args1, _unknown = parser.parse_known_args()
+
+    # If train and config file provided, set YAML values as defaults on the train subparser
+    if getattr(args1, "config", None):
+        cfg = load_yaml(args1.config) # Load YAML config as dict
+        defaults = cfg.get("defaults", {}) or {}
+        section = cfg.get(args1.command, {}) or {}
+        if not isinstance(defaults, dict) or not isinstance(section, dict):
+            raise ValueError("In YAML, 'defaults' and each command section must be mappings (dicts).")
+        
+        # Merged configuration for the chosen command
+        cfg_defaults = {**defaults, **section}
+
+        # Rebuild to access subparser cleanly
+        parser = build_parser()
+        if args1.command and cfg_defaults:
+            sub = get_subparser(parser, args1.command)
+
+            # Filter to valid keys for this subparser
+            valid_keys = {a.dest for a in sub._actions if a.dest not in (argparse.SUPPRESS, None)}
+            defaults_for_sub = {k: v for k, v in cfg_defaults.items() if k in valid_keys}
+
+            # Set YAML as defaults for relevant command; CLI flags will still override these
+            sub.set_defaults(**defaults_for_sub)
+
+        # Real parse with defaults from YAML applied
+        args = parser.parse_args()
+    else:
+        # No config — do a normal parse
+        args = parser.parse_args()
+
+    # Validate required after defaults applied
+    if getattr(args, "command", None) == "train":
+        if not getattr(args, "dataset", None):
+            parser.error("Missing required option: --dataset (provide it in --config YAML or via CLI)")
+
     return args.func(args)
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
