@@ -16,9 +16,10 @@ train:
   val_split: val
   download: true
   pretrained: true
-  epochs: 10
+  epochs: 5
   batch_size: 16
   lr: 0.001
+  track_val_dice: true
   weight_decay: 0.0
   bce_weight: 1.0
   dice_weight: 1.0
@@ -31,7 +32,7 @@ evaluate:
   checkpoint: ./runs/promise12_mnv3/best.pt
   metrics: [dice, confusion, pr]
   threshold: 0.5
-  # save_metrics: ./runs/promise12_mnv3/best.metrics
+  save_metrics: ./runs/promise12_mnv3/best.metrics
 
 # Predict/visualize (example)
 # predict:

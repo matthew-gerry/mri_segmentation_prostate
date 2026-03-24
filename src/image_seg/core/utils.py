@@ -9,7 +9,7 @@ import torch
 
 
 def _get_logits(output):
-    """Support both torchvision dict outputs and raw tensor outputs, based on the behaviour of the specific model."""
+    """INTERNAL HELPER FUNCTION TO SUPPORT BOTH TORCHVISION DICT OUTPUTS AND RAW TENSOR OUTPUTS, BASED ON THE BEHAVIOUR OF THE SPECIFIC MODEL """
     return output["out"] if isinstance(output, dict) else output
 
 

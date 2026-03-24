@@ -64,6 +64,8 @@ def build_parser():
     p_train.add_argument("--boundary-weight", type=float, default=0.0)
     p_train.add_argument("--threshold", type=float, default=0.5)
     p_train.add_argument("--save-dir", default="./runs/image-seg")
+    p_train.add_argument("--track-val-dice", action="store_true",
+        help="Whether to compute and track validation Dice coefficient during training (adds overhead, so optional)")
 
     # Bind to function
     p_train.set_defaults(func=run_train)

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import time
+import numpy as np
 from dataclasses import dataclass
 from typing import Tuple, Optional
 from xml.parsers.expat import model
@@ -40,6 +41,7 @@ class TrainConfig:
     weight_decay: float
     device: str
     save_dir: str              # where to write checkpoints/logs
+    track_val_dice: bool
     bce_weight: float = 1.0
     dice_weight: float = 1.0
     boundary_weight: float = 0.0
@@ -178,6 +180,7 @@ def run(args) -> int:
         weight_decay=args.weight_decay,
         device=args.device,
         save_dir=save_dir,
+        track_val_dice=args.track_val_dice,
 
         # Optional training hyperparameters with defaults specified in case they are not provided via CLI
         bce_weight=getattr(args, "bce_weight", 1.0),
@@ -206,12 +209,17 @@ def run(args) -> int:
     best_val = float("inf")
     best_path = os.path.join(cfg.save_dir, "best.pth")
 
+    val_dice_over_epochs = []
+
     t0 = time.time()
     for epoch in range(1, cfg.epochs + 1):
         # Run training procedure packaged inside train_one_epoch function
         train_loss = train_one_epoch(model, train_loader, optimizer, device, cfg)
         # Evaluate on the validation data
         val_loss, val_dice = validate_one_epoch(model, val_loader, device, cfg)
+
+        if cfg.track_val_dice:
+            val_dice_over_epochs.append(val_dice)
 
         total_time = time.time() - t0
         print(f"Epoch {epoch}/{cfg.epochs}  "
@@ -229,6 +237,9 @@ def run(args) -> int:
                 "config": cfg.__dict__,
             }, best_path)
             print(f"  ↳ Saved best checkpoint to: {best_path}")
+
+    if cfg.track_val_dice:
+        np.save(os.path.join(cfg.save_dir, "val_dice_over_epochs.npy"), np.array(val_dice_over_epochs))
 
     print(f"[train] complete. Best val loss: {best_val:.4f} @ {best_path}")
 
