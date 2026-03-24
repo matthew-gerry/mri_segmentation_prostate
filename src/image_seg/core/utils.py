@@ -7,6 +7,12 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 import torch
 
+
+def _get_logits(output):
+    """Support both torchvision dict outputs and raw tensor outputs, based on the behaviour of the specific model."""
+    return output["out"] if isinstance(output, dict) else output
+
+
 def distance_transform(mask):
     """
     DISTANCE TRANSFORM SEPARATELY FOR INSIDE AND OUTSIDE OF THE MASK, WHICH CAN BE USED TO CONSTRUCT THE SIGNED DISTANCE MAP

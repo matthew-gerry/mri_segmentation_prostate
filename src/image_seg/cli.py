@@ -3,16 +3,17 @@
 import argparse
 import yaml
 from image_seg.commands.train import run as run_train
+from image_seg.commands.evaluate import run as run_evaluate
 
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="image_seg",
         description="Image segmentation CLI (minimal skeleton)"
     )
-    sub = parser.add_subparsers(dest="command", required=True)
+    subs = parser.add_subparsers(dest="command", required=True)
 
-    # Arguments for train subcommand
-    p_train = sub.add_parser("train", help="Train a model")
+    # -------- Arguments for train subcommand --------
+    p_train = subs.add_parser("train", help="Train a model")
     
     # Path to YAML config file (optional, can also specify options via CLI args)
     p_train.add_argument("--config", help="Path to YAML config file")
@@ -68,14 +69,29 @@ def build_parser():
     p_train.set_defaults(func=run_train)
 
 
-    # Arguments for evaluate command (skeleton for later) ----
-    # p_eval = subs.add_parser("evaluate", help="Evaluate a model")
-    # p_eval.add_argument("--dataset", choices=["promise12"], default=None)
-    # p_eval.add_argument("--split", default=None)
-    # p_eval.add_argument("--checkpoint", default=None)
-    # p_eval.add_argument("--threshold", type=float, default=None)
-    # p_eval.add_argument("--device", choices=["cpu", "cuda"], default=None)
-    # p_eval.set_defaults(func=run_evaluate)
+    # -------- Arguments for evaluate subcommand --------
+    p_eval = subs.add_parser("evaluate", help="Evaluate a model")
+    
+    # Path to YAML config file
+    p_eval.add_argument("--config", help="Path to YAML config file")
+
+    # Data and model import settings
+    p_eval.add_argument("--dataset", choices=["promise12"], default=None, help="Dataset to evaluate on (from YAML or CLI)")
+    p_eval.add_argument("--split", default=None)
+    p_eval.add_argument("--arch", choices=["unet", "deeplabv3-mnv3"], default=None, help="Model architecture")
+    p_eval.add_argument("--checkpoint", default=None, help="Path to the trained model checkpoint to evaluate")
+    
+    # Device
+    p_eval.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
+    
+    # Data loading and evaluation hyperparams
+    p_eval.add_argument("--resize", type=int, default=128, help="Square resize (e.g. 128)")
+    p_eval.add_argument("--threshold", type=float, default=0.5)
+    p_eval.add_argument("--num-workers", type=int, default=None, help="Number of DataLoader workers.")
+    p_eval.add_argument("--metrics", nargs="+", default=None, help="Which metrics to compute (e.g. dice, pr, confusion).")
+
+    # Bind to function
+    p_eval.set_defaults(func=run_evaluate)
 
     return parser
 
@@ -114,14 +130,14 @@ def main() -> int:
         # Rebuild to access subparser cleanly
         parser = build_parser()
         if args1.command and cfg_defaults:
-            sub = get_subparser(parser, args1.command)
+            subs = get_subparser(parser, args1.command)
 
             # Filter to valid keys for this subparser
-            valid_keys = {a.dest for a in sub._actions if a.dest not in (argparse.SUPPRESS, None)}
+            valid_keys = {a.dest for a in subs._actions if a.dest not in (argparse.SUPPRESS, None)}
             defaults_for_sub = {k: v for k, v in cfg_defaults.items() if k in valid_keys}
 
             # Set YAML as defaults for relevant command; CLI flags will still override these
-            sub.set_defaults(**defaults_for_sub)
+            subs.set_defaults(**defaults_for_sub)
 
         # Real parse with defaults from YAML applied
         args = parser.parse_args()

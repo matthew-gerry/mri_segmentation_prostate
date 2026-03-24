@@ -11,23 +11,19 @@ import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
-# ---- Import function from custom modules of the project ----
+# Import functions from custom modules
 from image_seg.core.data import MRIDataset
 from image_seg.core.models import SimpleUNet, TLDeepLabV3MobileNet
 from image_seg.core.losses import combined_loss
-from image_seg.core.utils import dice_coefficient
+from image_seg.core.utils import dice_coefficient, _get_logits
 
-# ------------------ Helpers ------------------
-
-def _get_logits(output):
-    """Support both torchvision dict outputs and raw tensor outputs, based on the behaviour of the specific model."""
-    return output["out"] if isinstance(output, dict) else output
 
 def _ensure_dir(path: str):
+    ''' Helper function to create a directory if it doesn't exist '''
     os.makedirs(path, exist_ok=True)
     return path
 
-# ------------------ Config container ------------------
+# -------- Config container --------
 
 @dataclass
 class TrainConfig:
@@ -51,7 +47,7 @@ class TrainConfig:
     threshold: float = 0.5
 
 
-# ------------------ Dataset factory ------------------
+# -------- Dataset factory --------
 
 def build_datasets(cfg: TrainConfig):
     """
@@ -78,7 +74,7 @@ def build_datasets(cfg: TrainConfig):
         # Return an error saying the project must be modified to load data from other sources
         RuntimeError("The tool is currently designed to perform segmentation on the Promise12 dataset available through medsegbench(https://medsegbench.github.io/). Modifications may be made to incorporate other datasets. Additional arguments to the tool may be necessary.")
 
-# ------------------ Model factory ------------------
+# -------- Model factory --------
 
 def build_model(cfg: TrainConfig):
     """
@@ -97,7 +93,7 @@ def build_model(cfg: TrainConfig):
     return model
 
 
-# ------------------ Training/validation steps ------------------
+# -------- Training/validation steps ------------------
 
 
 def train_one_epoch(model, loader, optimizer, device, cfg: TrainConfig):

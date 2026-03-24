@@ -2,6 +2,7 @@
 
 # Defaults that apply to all commands unless overridden
 defaults:
+  arch: deeplabv3-mnv3
   device: cpu
   num_workers: 2
   resize: 128
@@ -14,7 +15,6 @@ train:
   train_split: train
   val_split: val
   download: true
-  arch: deeplabv3-mnv3
   pretrained: true
   epochs: 10
   batch_size: 16
@@ -28,15 +28,16 @@ train:
 evaluate:
   dataset: promise12
   split: val
-  checkpoint: ./runs/image-seg/best.pt
+  checkpoint: ./runs/promise12_mnv3/best.pt
   metrics: [dice, pr, confusion]
+  threshold: 0.5
 
 # Predict/visualize (example)
 # predict:
 #   dataset: promise12
 #   split: val
-#   checkpoint: ./runs/image-seg/best.pt
-#   save_dir: ./runs/image-seg/preds
+#   checkpoint: ./runs/promise12_mnv3/best.pt
+#   save_dir: ./runs/promise12_mnv3/preds
 #   save_prob: false
 #   overlay: true
 
@@ -44,6 +45,6 @@ evaluate:
 # ba:
 #   dataset: promise12
 #   split: val
-#   checkpoint: ./runs/image-seg/best.pt
+#   checkpoint: ./runs/promise12_mnv3/best.pt
 #   relative: false
 #   pixel_spacing: null  # e.g., [0.625, 0.625] if known
