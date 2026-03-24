@@ -38,28 +38,6 @@ def signed_distance_map(mask):
     return sdf.astype(np.float32)
 
 
-# def accuracy(logits, masks):
-#     '''CALCULATE THE ACCURACY OF THE PREDICTIONS, WHICH IS THE FRACTION OF PIXELS CORRECTLY CLASSIFIED '''
-
-#     # The outputs are logits, apply sigmoid and threshold at 0.5
-#     predictions = torch.sigmoid(logits) > 0.5  # Binarize predictions
-
-#     # predictions = (predictions > 0.5).squeeze(1).float()  # Binarize predictions
-
-#     batch_size = predictions.shape[0]
-#     predictions = predictions.view(batch_size, -1)
-#     masks = masks.view(batch_size, -1)
-
-#     # Compute accuracy for each sample in batch
-#     # correct = torch.sum(predictions == masks, dim=1).sum().item()
-#     # Convert to float for division, and compute total number of pixels
-#     correct = torch.sum(predictions == masks, dim=1).float()
-#     total = predictions.shape[1]
-#     sample_accuracy = correct / total
-    
-#     return torch.mean(sample_accuracy)
-
-
 def dice_coefficient(logits, masks, threshold=0.5, eps=1e-7):
     ''' CALCULATE THE DICE COEFFICIENT, WHICH IS A MEASURE OF OVERLAP BETWEEN THE PREDICTION AND THE GROUND TRUTH MASK. IT RANGES FROM 0 TO 1, WHERE 1 MEANS PERFECT OVERLAP AND 0 MEANS NO OVERLAP. THIS IS A MORE MEANINGFUL METRIC THAN ACCURACY FOR IMBALANCED DATASETS '''
 
@@ -79,6 +57,39 @@ def dice_coefficient(logits, masks, threshold=0.5, eps=1e-7):
     
     return torch.mean(dice)
 
+
+def confusion_matrix(logits, masks, threshold=0.5):
+    ''' CALCULATE THE CONFUSION MATRIX COMPONENTS (TP, FP, TN, FN) FOR A BATCH OF PREDICTIONS AND MASKS. RETURNS A DICT WITH THE COUNTS OF EACH COMPONENT '''
+
+    # The outputs are logits, apply sigmoid and threshold at 0.5
+    predictions = torch.sigmoid(logits) > threshold  # Binarize predictions
+
+    # Flatten spatial dimensions while preserving batch
+    batch_size = predictions.shape[0]
+    predictions = predictions.view(batch_size, -1)
+    masks = masks.view(batch_size, -1)
+
+    TP = torch.sum((predictions == 1) & (masks == 1)).item()
+    FP = torch.sum((predictions == 1) & (masks == 0)).item()
+    TN = torch.sum((predictions == 0) & (masks == 0)).item()
+    FN = torch.sum((predictions == 0) & (masks == 1)).item()
+
+    return {"TP": TP, "FP": FP, "TN": TN, "FN": FN}
+
+
+def precision_recall(conf):
+    ''' CALCULATE THE PRECISION AND RECALL FROM THE CONFUSION MATRIX COMPONENTS '''
+
+    # Grab the confusion matrix components from the input dict
+    TP = conf["TP"]
+    FP = conf["FP"]
+    FN = conf["FN"]
+
+    # Calculate precision and recall, handling division by zero cases
+    precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
+    recall = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+
+    return precision, recall
 
 
 # def bland_altman_areas(logits, masks, threshold=0.5):

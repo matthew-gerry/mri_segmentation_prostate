@@ -89,6 +89,7 @@ def build_parser():
     p_eval.add_argument("--threshold", type=float, default=0.5)
     p_eval.add_argument("--num-workers", type=int, default=None, help="Number of DataLoader workers.")
     p_eval.add_argument("--metrics", nargs="+", default=None, help="Which metrics to compute (e.g. dice, pr, confusion).")
+    p_eval.add_argument("--save-metrics", default=None, help="Optional: Path to save computed metrics as JSON file.")
 
     # Bind to function
     p_eval.set_defaults(func=run_evaluate)

@@ -29,8 +29,9 @@ evaluate:
   dataset: promise12
   split: val
   checkpoint: ./runs/promise12_mnv3/best.pt
-  metrics: [dice, pr, confusion]
+  metrics: [dice, confusion, pr]
   threshold: 0.5
+  # save_metrics: ./runs/promise12_mnv3/best.metrics
 
 # Predict/visualize (example)
 # predict:
