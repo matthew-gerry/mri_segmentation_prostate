@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+from typing import Optional
+
 from dataclasses import dataclass
 import numpy as np
 from matplotlib import pyplot as plt
@@ -19,15 +21,17 @@ from image_seg.core.utils import _get_logits#, dice_coefficient, confusion_matri
 # -------- Config container for visualization --------
 @dataclass
 class VisualizeConfig:
-    dataset: str                # 'promise12'
-    split: str                  # usually 'val'
-    arch: str                   # 'unet' or 'deeplabv3-mnv3'
-    checkpoint: str             # path to .pt file
-    device: str                 # cpu/cuda
-    num_workers: int            # dataloader workers
-    resize: int = 128           # square resize (e.g. 128)
-    num_samples: int = 4        # number of samples to visualize from the validation set
-    fig_save_path: str # where to save the visualization figure
+    dataset: str                        # 'promise12'
+    split: str                          # usually 'val'
+    arch: str                           # 'unet' or 'deeplabv3-mnv3'
+    checkpoint: str                     # path to .pt file
+    threshold: float                    # prob threshold for binary mask
+    device: str                         # cpu/cuda
+    num_workers: int                    # dataloader workers
+    fig_save_dir: str                   # where to save the visualization figure
+    val_dice_path: Optional[str] = None # optional path to val dice history .npy file for plotting val dice vs. epoch
+    resize: Optional[int] = None        # square resize (e.g. 128)
+    num_samples: int = 4                # number of samples to visualize from the validation set
 
 # -------- Dataset building function ---------
 def build_dataset(cfg: VisualizeConfig):
@@ -133,7 +137,7 @@ def visualize_predictions(cfg):
             logits = _get_logits(outputs)
             
             # Prob -> binary
-            probs = torch.sigmoid(logits).squeeze(0).cpu().numpy()  # [H, W]
+            probs = torch.sigmoid(logits).squeeze(0).squeeze(0).cpu().numpy()  # [H, W]
             pred_mask = (probs > cfg.threshold).astype(np.uint8)  # Binary mask
 
             # Raw image and ground truth mask from base dataset (PIL images)
@@ -153,5 +157,72 @@ def visualize_predictions(cfg):
 
     plt.suptitle("Visualization of model behaviour: transfer learning", fontsize=16, weight='bold')
     plt.tight_layout()
-    plt.savefig(os.path.join(cfg.fig_save_path, "prediction_visualization.png"), dpi=300)
+    plt.savefig(os.path.join(cfg.fig_save_dir, "prediction_visualization.png"), dpi=300)
 
+    
+def plot_val_dice_vs_epoch(cfg):
+    """
+    FUNCTION TO PLOT VALIDATION DICE COEFFICIENT VS. TRAINING EPOCH, IF VAL DICE WAS TRACKED AND SAVED DURING TRAINING
+    """
+
+    # Load validation dice history directory
+    val_dice_history_path = cfg.val_dice_path
+
+    val_dice_history = np.load(val_dice_history_path)
+
+    epochs = np.arange(1, len(val_dice_history) + 1)
+    # Plot val dice vs. epoch
+    plt.figure(figsize=(6, 4))
+    plt.plot(epochs, val_dice_history, marker='o')
+
+    plt.xlim(1, len(val_dice_history))
+    plt.ylim(min(val_dice_history), 1)
+    plt.xticks(epochs)
+
+    plt.title("Validation Dice Coefficient vs. Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Validation Dice Coefficient")
+    plt.grid()
+    plt.savefig(os.path.join(cfg.fig_save_dir, "val_dice_vs_epoch.png"), dpi=300)
+    plt.close()
+
+# -------- CLI entry point ---------
+
+def run(args) -> int:
+    """
+    args: Namespace object from argparse with fields corresponding to VisualizeConfig
+    """
+
+    cfg = VisualizeConfig(
+        dataset=args.dataset,
+        split=args.split,
+        arch=args.arch,
+        checkpoint=args.checkpoint,
+        threshold=args.threshold,
+        device=args.device,
+        num_workers=args.num_workers,
+        resize=args.resize,
+        num_samples=args.num_samples,
+        fig_save_dir=args.fig_save_dir,
+        val_dice_path=args.val_dice_path
+    )
+
+    # Create specified figure save directory if it doesn't exist
+    os.makedirs(cfg.fig_save_dir, exist_ok=True)
+
+    print(f"\n[visualize] running visualization with config:")
+    for k, v in cfg.__dict__.items():
+        print(f"  - {k}: {v}")
+
+    visualizations = args.visualizations if args.visualizations is not None else ["preds"]
+
+    # Generate visualizations
+    print(f"\n[visualize] generating visualizations: {visualizations}\n")
+
+    if "preds" in visualizations:
+        visualize_predictions(cfg)
+
+    if "val_dice_vs_epoch" in visualizations:
+        plot_val_dice_vs_epoch(cfg)
+
+    return 0

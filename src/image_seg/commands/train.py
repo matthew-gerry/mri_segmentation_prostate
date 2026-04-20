@@ -42,6 +42,7 @@ class TrainConfig:
     device: str
     save_dir: str              # where to write checkpoints/logs
     track_val_dice: bool
+    checkpoint: str
     bce_weight: float = 1.0
     dice_weight: float = 1.0
     boundary_weight: float = 0.0
@@ -91,6 +92,12 @@ def build_model(cfg: TrainConfig):
         model = TLDeepLabV3MobileNet()
     else:
         raise ValueError(f"Unsupported arch: {cfg.arch}")
+    
+    # Load checkpoint, if specified, to resume training
+    if cfg.checkpoint:
+        ckpt = torch.load(cfg.checkpoint, map_location="cpu")
+        state = ckpt["model_state"]
+        model.load_state_dict(state)
 
     return model
 
@@ -181,6 +188,7 @@ def run(args) -> int:
         device=args.device,
         save_dir=save_dir,
         track_val_dice=args.track_val_dice,
+        checkpoint=args.checkpoint,
 
         # Optional training hyperparameters with defaults specified in case they are not provided via CLI
         bce_weight=getattr(args, "bce_weight", 1.0),
@@ -207,7 +215,7 @@ def run(args) -> int:
 
     # Training loop with best checkpoint saving
     best_val = float("inf")
-    best_path = os.path.join(cfg.save_dir, "best.pth")
+    best_path = os.path.join(cfg.save_dir, "best.pt")
 
     val_dice_over_epochs = []
 

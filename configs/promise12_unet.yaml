@@ -1,13 +1,13 @@
-# configs/promise12_mnv3.yaml
+# configs/promise12_unet.yaml
 
 # Defaults that apply to all commands unless overridden
 defaults:
-  arch: deeplabv3-mnv3
+  arch: unet
   device: cpu
   num_workers: 2
   resize: 128
   threshold: 0.5
-  save_dir: ./runs/promise12_mnv3/
+  save_dir: ./runs/promise12_unet/
   dataset: promise12
 
 # Train-specific settings
@@ -24,28 +24,28 @@ train:
   bce_weight: 1.0
   dice_weight: 1.0
   boundary_weight: 0.0
-  # checkpoint: ./runs/promise12_mnv3/best.pt
+  checkpoint: ./runs/promise12_unet/best.pt
 
 # Evaluate-specific settings
 evaluate:
   split: val
-  checkpoint: ./runs/promise12_mnv3/best.pt
+  checkpoint: ./runs/promise12_unet/best.pt
   metrics: [dice, confusion, pr]
   threshold: 0.5
-  save_metrics: ./runs/promise12_mnv3/best.metrics
+  save_metrics: ./runs/promise12_unet/best.metrics
 
 # Predict/visualize (example)
 visualize:
   split: val
-  checkpoint: ./runs/promise12_mnv3/best.pt
-  val_dice_path: ./runs/promise12_mnv3/val_dice_over_epochs.npy
-  fig_save_dir: ./runs/promise12_mnv3/figs/
+  checkpoint: ./runs/promise12_unet/best.pt
+  val_dice_path: ./runs/promise12_unet/val_dice_over_epochs.npy
+  fig_save_dir: ./runs/promise12_unet/figs/
   visualizations: [preds, val_dice_vs_epoch]
 
 # Bland-Altman (example)
 # ba:
 #   dataset: promise12
 #   split: val
-#   checkpoint: ./runs/promise12_mnv3/best.pt
+#   checkpoint: ./runs/promise12_unet/best.pt
 #   relative: false
 #   pixel_spacing: null  # e.g., [0.625, 0.625] if known

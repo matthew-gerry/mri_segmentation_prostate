@@ -4,6 +4,7 @@ import argparse
 import yaml
 from image_seg.commands.train import run as run_train
 from image_seg.commands.evaluate import run as run_evaluate
+from image_seg.commands.visualize import run as run_visualize
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -66,6 +67,7 @@ def build_parser():
     p_train.add_argument("--save-dir", default="./runs/image-seg")
     p_train.add_argument("--track-val-dice", action="store_true",
         help="Whether to compute and track validation Dice coefficient during training (adds overhead, so optional)")
+    p_train.add_argument("--checkpoint", default=None, help="Optional path to a model checkpoint (.pt) to resume training from")
 
     # Bind to function
     p_train.set_defaults(func=run_train)
@@ -95,6 +97,34 @@ def build_parser():
 
     # Bind to function
     p_eval.set_defaults(func=run_evaluate)
+
+
+    # -------- Arguments for visualize subcommand --------
+    p_vis = subs.add_parser("visualize", help="Visualize model predictions")
+
+    # Path to YAML config file
+    p_vis.add_argument("--config", help="Path to YAML config file")
+
+    # Data and model import settings
+    p_vis.add_argument("--dataset", choices=["promise12"], default=None, help="Dataset for which to create visualizations")
+    p_vis.add_argument("--split", default=None, help="Dataset split to visualize (e.g. 'val')")
+    p_vis.add_argument("--arch", choices=["unet", "deeplabv3-mnv3"], default=None, help="Model architecture")
+    p_vis.add_argument("--checkpoint", default=None, help="Path to the trained model checkpoint to visualize")
+    p_vis.add_argument("--val-dice-path", default=None, help="Optional path to .npy file containing validation Dice history for plotting val dice vs. epoch")
+    
+    # Device 
+    p_vis.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
+
+    # Data loading and visualization hyperparams
+    p_vis.add_argument("--resize", type=int, default=128, help="Square resize (e.g. 128)")
+    p_vis.add_argument("--threshold", type=float, default=0.5, help="Probability threshold for binary mask visualization")
+    p_vis.add_argument("--num-samples", type=int, default=4, help="Number of samples to visualize from the validation set")
+    p_vis.add_argument("--fig-save-dir", default="./runs/image-seg/figs", help="Directory in which to save the visualization figure")
+    p_vis.add_argument("--num-workers", type=int, default=None, help="Number of DataLoader workers.")
+    p_vis.add_argument("--visualizations", nargs="+", default=["preds"], help="Which visualizations to create (e.g. 'preds', 'epoch_vs_val_dice')")
+    
+    # Bind to function
+    p_vis.set_defaults(func=run_visualize)
 
     return parser
 
