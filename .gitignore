@@ -9,3 +9,5 @@ to_do.txt
 src/image_seg.egg-info/
 
 runs/
+
+do_everything_unet.sh

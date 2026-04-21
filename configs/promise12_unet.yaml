@@ -34,7 +34,7 @@ evaluate:
   threshold: 0.5
   save_metrics: ./runs/promise12_unet/best.metrics
 
-# Predict/visualize (example)
+# Visualize-specific settings
 visualize:
   split: val
   checkpoint: ./runs/promise12_unet/best.pt
@@ -42,10 +42,3 @@ visualize:
   fig_save_dir: ./runs/promise12_unet/figs/
   visualizations: [preds, val_dice_vs_epoch, bland_altman]
 
-# Bland-Altman (example)
-# ba:
-#   dataset: promise12
-#   split: val
-#   checkpoint: ./runs/promise12_unet/best.pt
-#   relative: false
-#   pixel_spacing: null  # e.g., [0.625, 0.625] if known
