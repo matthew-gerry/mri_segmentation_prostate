@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from image_seg.core.data import MRIDataset
 # from image_seg.core.losses import combined_loss
 from image_seg.core.models import SimpleUNet, TLDeepLabV3MobileNet
-from image_seg.core.utils import _get_logits#, dice_coefficient, confusion_matrix, precision_recall
+from image_seg.core.utils import _get_logits, bland_altman_areas
 
 # -------- Config container for visualization --------
 @dataclass
@@ -162,7 +162,7 @@ def visualize_predictions(cfg):
     
 def plot_val_dice_vs_epoch(cfg):
     """
-    FUNCTION TO PLOT VALIDATION DICE COEFFICIENT VS. TRAINING EPOCH, IF VAL DICE WAS TRACKED AND SAVED DURING TRAINING
+    PLOT VALIDATION DICE COEFFICIENT VS. TRAINING EPOCH, IF VAL DICE WAS TRACKED AND SAVED DURING TRAINING
     """
 
     # Load validation dice history directory
@@ -185,6 +185,75 @@ def plot_val_dice_vs_epoch(cfg):
     plt.grid()
     plt.savefig(os.path.join(cfg.fig_save_dir, "val_dice_vs_epoch.png"), dpi=300)
     plt.close()
+
+
+def get_bland_altman_areas(cfg):
+    """
+    CALCULATE THE AREAS OF THE DIFFERENT REGIONS TOWARDS GENERATING THE BLAND-ALTMAN PLOT, WHICH CAN BE A MEANINGFUL WAY TO ASSESS THE CLINICAL UTILITY OF THE MODEL'S PREDICTIONS
+    """
+
+    # Build dataset and dataloader
+    dataset = build_dataset(cfg)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=cfg.num_workers)
+
+    # Load model and set to eval mode
+    model = load_model(cfg)
+    model.to(cfg.device)
+    model.eval()
+
+    gt_areas_by_batch = []
+    pred_areas_by_batch = []
+
+    with torch.no_grad():
+        for images, masks in dataloader:
+            image_batch = images.to(cfg.device)
+            masks_batch = masks.to(cfg.device)
+            outputs = model(image_batch)
+
+            logits = _get_logits(outputs)
+
+            # masks_np = masks.squeeze(1).cpu().numpy()  # [B, H, W]
+            ba_batch = bland_altman_areas(logits, masks_batch, threshold=cfg.threshold)
+
+            gt_areas_by_batch.append(ba_batch[0])
+            pred_areas_by_batch.append(ba_batch[1])
+
+        gt_areas = np.concatenate(gt_areas_by_batch)
+        pred_areas = np.concatenate(pred_areas_by_batch)
+
+    return gt_areas, pred_areas
+
+
+def plot_bland_altman(cfg):
+    """
+    CREATE BLAND-ALTMAN PLOT
+    """
+
+    gt_areas, pred_areas = get_bland_altman_areas(cfg)
+
+    means = (gt_areas + pred_areas) / 2
+    diffs = pred_areas - gt_areas
+
+    bias = float(diffs.mean()) # Bias in overall area predicted by the model vs. the ground truth
+    sd = float(diffs.std(ddof=1)) if diffs.size > 1 else 0.0 # Standard deviation of the differences
+    loa_low = bias - 1.96 * sd # Lower limit of agreement
+    loa_high = bias + 1.96 * sd # Upper limit of agreement
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.scatter(means, diffs, alpha=0.5)
+    ax.axhline(bias, color='blue', linestyle='-', label=f'Bias = {bias:.2f}')
+    ax.text(means.max()*0.95, bias, f'BIAS = {bias:.2f}', color='blue', fontsize=12, verticalalignment='bottom', horizontalalignment='right')
+    ax.axhline(loa_low, color='red', linestyle='--', label=f'Lower LoA = {loa_low:.2f}')
+    ax.text(means.max()*0.95, loa_low, f'-1.96SD: {loa_low:.2f}', color='red', fontsize=12, verticalalignment='bottom', horizontalalignment='right')
+    ax.axhline(loa_high, color='red', linestyle='--', label=f'Upper LoA = {loa_high:.2f}')
+    ax.text(means.max()*0.95, loa_high-6, f'+1.96SD: {loa_high:.2f}', color='red', fontsize=12, verticalalignment='top', horizontalalignment='right')
+    ax.set_xlabel("Mean of Predicted and Ground Truth Areas (pixels)")
+    ax.set_ylabel("Difference between Predicted and Ground Truth Areas (pixels)")
+    ax.set_title("Bland-Altman Plot: Predicted vs. Ground Truth Areas")
+    ax.grid()
+    plt.savefig(os.path.join(cfg.fig_save_dir, "bland_altman_plot.png"), dpi=300)
+    plt.close()
+
 
 # -------- CLI entry point ---------
 
@@ -224,5 +293,8 @@ def run(args) -> int:
 
     if "val_dice_vs_epoch" in visualizations:
         plot_val_dice_vs_epoch(cfg)
+
+    if "bland_altman" in visualizations:
+        plot_bland_altman(cfg)
 
     return 0

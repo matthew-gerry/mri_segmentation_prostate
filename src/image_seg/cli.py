@@ -92,7 +92,7 @@ def build_parser():
     p_eval.add_argument("--resize", type=int, default=128, help="Square resize (e.g. 128)")
     p_eval.add_argument("--threshold", type=float, default=0.5)
     p_eval.add_argument("--num-workers", type=int, default=None, help="Number of DataLoader workers.")
-    p_eval.add_argument("--metrics", nargs="+", default=None, help="Which metrics to compute (e.g. dice, pr, confusion).")
+    p_eval.add_argument("--metrics", nargs="+", choices=["dice", "pr", "confusion"], default=None, help="Which metrics to compute (e.g. dice, pr, confusion).")
     p_eval.add_argument("--save-metrics", default=None, help="Optional: Path to save computed metrics as JSON file.")
 
     # Bind to function
@@ -121,7 +121,7 @@ def build_parser():
     p_vis.add_argument("--num-samples", type=int, default=4, help="Number of samples to visualize from the validation set")
     p_vis.add_argument("--fig-save-dir", default="./runs/image-seg/figs", help="Directory in which to save the visualization figure")
     p_vis.add_argument("--num-workers", type=int, default=None, help="Number of DataLoader workers.")
-    p_vis.add_argument("--visualizations", nargs="+", default=["preds"], help="Which visualizations to create (e.g. 'preds', 'epoch_vs_val_dice')")
+    p_vis.add_argument("--visualizations", nargs="+", choices=["preds", "epoch_vs_val_dice", "bland_altman"], default=["preds"], help="Which visualizations to create (e.g. 'preds', 'epoch_vs_val_dice')")
     
     # Bind to function
     p_vis.set_defaults(func=run_visualize)

@@ -92,25 +92,18 @@ def precision_recall(conf):
     return precision, recall
 
 
-# def bland_altman_areas(logits, masks, threshold=0.5):
-#     ''' CALCULATE THE BLAND-ALTMAN MEASURES FOR THE PREDICTED VS GROUND TRUTH AREAS FOR A BATCH OF PREDICTIONS AND MASKS. RETURNS A DICT WITH ALL QUANTITIES RELEVANT TO CREATING THE BLAND-ALTMAN PLOT '''
+def bland_altman_areas(logits, masks, threshold=0.5):
+    ''' CALCULATE THE BLAND-ALTMAN MEASURES FOR THE PREDICTED VS GROUND TRUTH AREAS FOR A BATCH OF PREDICTIONS AND MASKS. RETURNS A DICT WITH ALL QUANTITIES RELEVANT TO CREATING THE BLAND-ALTMAN PLOT '''
 
-#     # The outputs are logits, apply sigmoid and threshold at 0.5
-#     predictions = torch.sigmoid(logits) > threshold  # Binarize predictions
+    # The outputs are logits, apply sigmoid and threshold at 0.5
+    predictions = torch.sigmoid(logits) > threshold  # Binarize predictions
 
-#     # Flatten spatial dimensions while preserving batch
-#     batch_size = predictions.shape[0]
-#     predictions = predictions.view(batch_size, -1)
-#     masks = masks.view(batch_size, -1)
+    # Flatten spatial dimensions while preserving batch
+    batch_size = predictions.shape[0]
+    predictions = predictions.view(batch_size, -1)
+    masks = masks.view(batch_size, -1)
 
-#     gt_areas = masks.sum(dim=1).numpy()  # (B,)
-#     pred_areas = predictions.sum(dim=1).numpy()  # (B,)
+    gt_areas = masks.sum(dim=1).numpy()  # (B,)
+    pred_areas = predictions.sum(dim=1).numpy()  # (B,)
 
-#     # means = 0.5 * (pred_areas + gt_areas)
-#     # diffs = pred_areas - gt_areas
-#     # bias = float(diffs.mean())
-#     # sd = float(diffs.std(ddof=1)) if diffs.size > 1 else 0.0
-#     # loa_low = bias - 1.96 * sd
-#     # loa_high = bias + 1.96 * sd
-
-#     return gt_areas, pred_areas
+    return gt_areas, pred_areas

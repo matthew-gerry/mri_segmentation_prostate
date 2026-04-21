@@ -16,7 +16,7 @@ train:
   val_split: val
   download: true
   pretrained: true
-  epochs: 10
+  epochs: 15
   batch_size: 16
   lr: 0.001
   track_val_dice: true
@@ -40,7 +40,7 @@ visualize:
   checkpoint: ./runs/promise12_mnv3/best.pt
   val_dice_path: ./runs/promise12_mnv3/val_dice_over_epochs.npy
   fig_save_dir: ./runs/promise12_mnv3/figs/
-  visualizations: [preds, val_dice_vs_epoch]
+  visualizations: [preds, val_dice_vs_epoch, bland_altman]
 
 # Bland-Altman (example)
 # ba:

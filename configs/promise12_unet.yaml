@@ -24,7 +24,7 @@ train:
   bce_weight: 1.0
   dice_weight: 1.0
   boundary_weight: 0.0
-  checkpoint: ./runs/promise12_unet/best.pt
+  # checkpoint: ./runs/promise12_unet/best.pt
 
 # Evaluate-specific settings
 evaluate:
@@ -40,7 +40,7 @@ visualize:
   checkpoint: ./runs/promise12_unet/best.pt
   val_dice_path: ./runs/promise12_unet/val_dice_over_epochs.npy
   fig_save_dir: ./runs/promise12_unet/figs/
-  visualizations: [preds, val_dice_vs_epoch]
+  visualizations: [preds, val_dice_vs_epoch, bland_altman]
 
 # Bland-Altman (example)
 # ba:
