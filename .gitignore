@@ -3,3 +3,8 @@ __pycache__/
 *pth
 DICE_scores/
 to_do.txt
+
+.venv/
+do_everything_unet.sh
+runs/
+src/
