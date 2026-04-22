@@ -1,6 +1,20 @@
-This is a self-study project to develop image segmentation models. The program is currently used by running the Python scripts, with the configuration set and hyperparameter adjustments made by editing the scripts themselves. In the feature branch I am working on turning it into a cli tool.
+This is a self-study project to develop image segmentation models, implemented as a cli tool.
 
-Using the Promise12MSBench dataset available from the medsegbench library (https://medsegbench.github.io/), I trained two models to identify pixels making up the prostate in MRI images: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision.
+Install the latest version of the cli tool (with the train command complete, other commands still to come) by running:
+
+```pip install "image-seg[promise12] @ git+https://github.com/matthew-gerry/mri_segmentation_prostate.git@feature"```
+
+The train command can then be run, along with a config.yaml file formatted according to the example provided, using:
+```image-seg train --config <path-to-config-yaml-file>```
+
+The model parameters will then be saved to the specified directory. It can be referenced for model evaulation using the same config.yaml file, via:
+``` image-seg evaluate --config <path-to-config-yaml-file> ``` 
+
+Additionally, a few visualizations, namely, the original images overlaid with contours of the predicted region, as well as the history of the DICE coefficient through training, and a Bland-Altman plot, are available through the visualize command:
+``` image-seg visualize --config <path-to-config-yaml-file> ``` 
+
+
+Using the Promise12MSBench dataset available from the medsegbench library (https://medsegbench.github.io/), I developed scripts to train two models to identify pixels making up the prostate in MRI images: one with a simple U-Net architecture trained from scratch, and another utilizing transfer learning, based on the deeplabv3_mobilenet_v3_large model available from torchvision. A future version of this tool may include the capacity to use locally saved image data sources rather than being limited to image datasets available through medsegbench.
 
 For the latter, the base model needed to be modified so that the final output layer is a 1x1 convolution, such that the outputs correspond to logits that give a probability of being part of the prostate when passed through a sigmoid. I also found that unfreezing the last four layers of the ''classifier'' as well as the last two modules in the backbone, provided sufficient flexibility that training could result in a model with some effectiveness on the dataset.
 

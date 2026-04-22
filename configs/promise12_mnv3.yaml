@@ -1,0 +1,43 @@
+# configs/promise12_mnv3.yaml
+
+# Defaults that apply to all commands unless overridden
+defaults:
+  arch: deeplabv3-mnv3
+  device: cpu
+  num_workers: 2
+  resize: 128
+  threshold: 0.5
+  save_dir: ./runs/promise12_mnv3/
+  dataset: promise12
+
+# Train-specific settings
+train:
+  train_split: train
+  val_split: val
+  download: true
+  pretrained: true
+  epochs: 15
+  batch_size: 16
+  lr: 0.001
+  track_val_dice: true
+  weight_decay: 0.0
+  bce_weight: 1.0
+  dice_weight: 1.0
+  boundary_weight: 0.0
+  # checkpoint: ./runs/promise12_mnv3/best.pt
+
+# Evaluate-specific settings
+evaluate:
+  split: val
+  checkpoint: ./runs/promise12_mnv3/best.pt
+  metrics: [dice, confusion, pr]
+  threshold: 0.5
+  save_metrics: ./runs/promise12_mnv3/best.metrics
+
+# Visualize-specific settings
+visualize:
+  split: val
+  checkpoint: ./runs/promise12_mnv3/best.pt
+  val_dice_path: ./runs/promise12_mnv3/val_dice_over_epochs.npy
+  fig_save_dir: ./runs/promise12_mnv3/figs/
+  visualizations: [preds, val_dice_vs_epoch, bland_altman]

@@ -1,10 +1,11 @@
 *.pyc
 __pycache__/
+.venv/
+
 *pth
 DICE_scores/
 to_do.txt
 
-.venv/
-do_everything_unet.sh
+src/image_seg.egg-info/
+
 runs/
-src/
