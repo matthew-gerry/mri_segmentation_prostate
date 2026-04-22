@@ -2,7 +2,7 @@ This is a self-study project to develop image segmentation models, implemented a
 
 Install the latest version of the cli tool (with the train command complete, other commands still to come) by running:
 
-```pip install "image-seg[promise12] @ git+https://github.com/matthew-gerry/mri_segmentation_prostate.git@feature"```
+```pip install "image-seg[promise12] @ git+https://github.com/matthew-gerry/mri_segmentation_prostate.git@main"```
 
 The train command can then be run, along with a config.yaml file formatted according to the example provided, using:
 ```image-seg train --config <path-to-config-yaml-file>```
