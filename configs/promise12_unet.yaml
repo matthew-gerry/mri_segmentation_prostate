@@ -16,7 +16,7 @@ train:
   val_split: val
   download: true
   pretrained: true
-  epochs: 10
+  epochs: 15
   batch_size: 16
   lr: 0.001
   track_val_dice: true
