@@ -3,8 +3,7 @@ __pycache__/
 .venv/
 
 *pth
-DICE_scores/
-to_do.txt
+*pt
 
 src/image_seg.egg-info/
 
